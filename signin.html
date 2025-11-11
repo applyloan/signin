@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device‑width, initial‑scale=1.0">
+  <title>Sign Up / Sign In</title>
+  <style>
+    * { margin:0; padding:0; box‑sizing:border-box; }
+    html, body { height:100%; font-family: Arial, sans‑serif; }
+    body {
+      background-image:url(download.webp);
+      background-size:cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .form-container {
+      background: rgba(255,255,255,0.9);
+      padding: 30px;
+      border-radius: 8px;
+      width: 320px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    label {
+      display:block;
+      margin-bottom:5px;
+      color:#555;
+    }
+    input[type="text"], input[type="email"], input[type="password"] {
+      width:100%;
+      padding:10px;
+      margin-bottom:15px;
+      border:1px solid #ccc;
+      border-radius:4px;
+    }
+    button {
+      width:100%;
+      padding:12px;
+      background-color:#007BFF;
+      border:none;
+      border-radius:4px;
+      color:#fff;
+      font-size:16px;
+      cursor:pointer;
+    }
+    button:hover {
+      background-color:#0056b3;
+    }
+    .toggle-link {
+      text-align:center;
+      margin-top:15px;
+    }
+    .toggle-link a {
+      color:#007BFF;
+      text-decoration:none;
+    }
+    .toggle-link a:hover {
+      text-decoration:underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>apply loan</h1>
+
+  <div class="form-container">
+    <h2 id="formTitle">Sign Up</h2>
+    <form id="authForm">
+      <input type="hidden" id="mode" value="signup">
+
+      <div id="nameField">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" placeholder="Enter your full name" required>
+      </div>
+
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="Enter your email" required autocomplete="username">
+
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Enter your password" required autocomplete="new-password">
+
+      <div id="confirmField">
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword" placeholder="Repeat your password" required>
+      </div>
+
+      <button type="submit" id="submitBtn">Register</button>
+
+      <div class="toggle-link">
+        <span id="toggleText">Already have an account?</span> <a href="#" id="toggleLink">Sign In</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // Import the functions you need from the SDKs
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
+
+    // Your Firebase configuration object (replace with YOUR values)
+const firebaseConfig = {
+  apiKey: "AIzaSyCHRJc6ESHPOvLkWy_-Bwcx0AJ7TEv8cxM",
+  authDomain: "kenyaconnect-homes.firebaseapp.com",
+  databaseURL: "https://kenyaconnect-homes-default-rtdb.firebaseio.com",
+  projectId: "kenyaconnect-homes",
+  storageBucket: "kenyaconnect-homes.firebasestorage.app",
+  messagingSenderId: "288863633200",
+  appId: "1:288863633200:web:4354a562f8cf701b3152f5",
+  measurementId: "G-5B2NPSCMB8"
+};
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const database = getDatabase(app);
+
+    // DOM elements
+    const form = document.getElementById('authForm');
+    const modeInput = document.getElementById('mode');
+    const nameField = document.getElementById('nameField');
+    const confirmField = document.getElementById('confirmField');
+    const submitBtn = document.getElementById('submitBtn');
+    const formTitle = document.getElementById('formTitle');
+    const toggleText = document.getElementById('toggleText');
+    const toggleLink = document.getElementById('toggleLink');
+
+    toggleLink.addEventListener('click', e => {
+      e.preventDefault();
+      if (modeInput.value === 'signup') {
+        // switch to sign in
+        modeInput.value = 'signin';
+        formTitle.textContent = 'Sign In';
+        nameField.style.display = 'none';
+        confirmField.style.display = 'none';
+        submitBtn.textContent = 'Login';
+        toggleText.textContent = "Don't have an account?";
+        toggleLink.textContent = 'Register';
+      } else {
+        // switch to sign up
+        modeInput.value = 'signup';
+        formTitle.textContent = 'Sign Up';
+        nameField.style.display = 'block';
+        confirmField.style.display = 'block';
+        submitBtn.textContent = 'Register';
+        toggleText.textContent = "Already have an account?";
+        toggleLink.textContent = 'Sign In';
+      }
+    });
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const mode = modeInput.value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      if (mode === 'signup') {
+        const name = document.getElementById('name').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (password !== confirmPassword) {
+          alert("Passwords do not match!");
+          return;
+        }
+
+        createUserWithEmailAndPassword(auth, email, password)
+          .then(userCredential => {
+            const user = userCredential.user;
+            // Save additional user info to Realtime Database
+            return set(ref(database, 'users/' + user.uid), {
+              name: name,
+              email: email,
+              createdAt: Date.now()
+            });
+          })
+          .then(() => {
+            // Redirect to home
+            window.location.href = 'home.html';
+          })
+          .catch(error => {
+            alert(error.message);
+          });
+
+      } else { // signin
+        signInWithEmailAndPassword(auth, email, password)
+          .then(userCredential => {
+            // Signed in
+            window.location.href = 'home.html';
+          })
+          .catch(error => {
+            alert(error.message);
+          });
+      }
+    });
+
+  </script>
+
+</body>
+</html>
