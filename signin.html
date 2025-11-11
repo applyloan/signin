@@ -131,10 +131,10 @@ const firebaseConfig = {
 
     toggleLink.addEventListener('click', e => {
       e.preventDefault();
-      if (modeInput.value === 'signup') {
+      if (modeInput.value == 'signup') {
         // switch to sign in
         modeInput.value = 'signin';
-        formTitle.textContent = 'Sign In';
+        formTitle.textContent == 'Sign In';
         nameField.style.display = 'none';
         confirmField.style.display = 'none';
         submitBtn.textContent = 'Login';
@@ -201,4 +201,5 @@ const firebaseConfig = {
 
 </body>
 </html>
+
 
